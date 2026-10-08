@@ -29,12 +29,18 @@ class GamePanel extends JPanel {
          ball.update();
          paddle.update();
 
+         // Ball-Paddle collisions
+         if (isColliding(ball, paddle) && ball.getVelocityY() > 0) {
+             ball.setY(paddle.getY() - ball.getDiameter());
+             ball.bounceY();
+         }
+
          // Ball collisions
          if (ball.getX() <= 0 || ball.getX() + ball.getDiameter() >= getWidth()) {
              ball.bounceX();
          }
 
-         if (ball.getY() <= 0 || ball.getY() + ball.getDiameter() >= getHeight()) {
+         if (ball.getY() <= 0) {
              ball.bounceY();
          }
 
@@ -54,6 +60,13 @@ class GamePanel extends JPanel {
 
         ball.draw((Graphics2D) g);
         paddle.draw((Graphics2D) g);
+    }
+
+    private boolean isColliding(Ball ball, Paddle paddle) {
+        return ball.getY() + ball.getDiameter() >= paddle.getY() &&
+                ball.getX() + ball.getDiameter() >= paddle.getX() &&
+                ball.getX() <= paddle.getX() + paddle.getWidth() &&
+                ball.getY() <= paddle.getY() + paddle.getHeight();
     }
 
     private void setUpKeyBindings() {

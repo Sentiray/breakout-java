@@ -44,4 +44,12 @@ public class Ball {
     public int getDiameter() {
         return this.diameter;
     }
+
+    public int getVelocityY() {
+        return this.velocityY;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
 }

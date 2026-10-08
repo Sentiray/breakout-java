@@ -65,6 +65,10 @@ public class Paddle {
         return this.width;
     }
 
+    public int getHeight() {
+        return this.height;
+    }
+
     public void setX(int x) {
         this.x = x;
     }
