@@ -6,8 +6,9 @@ class GamePanel extends JPanel {
      private static final int PANEL_WIDTH = 800;
      private static final int PANEL_HEIGHT = 600;
 
-     private Ball ball;
-     private Paddle paddle;
+     private final Ball ball;
+     private final Paddle paddle;
+     private final Brick brick;
 
      public GamePanel() {
          this.setPreferredSize(new Dimension(PANEL_WIDTH, PANEL_HEIGHT));
@@ -15,6 +16,7 @@ class GamePanel extends JPanel {
 
          ball = new Ball();
          paddle = new Paddle();
+         brick = new Brick(13, 20, Color.red);
 
          setUpKeyBindings();
 
@@ -25,33 +27,14 @@ class GamePanel extends JPanel {
          timer.start();
     }
 
-     public void update() {
+     private void update() {
          ball.update();
          paddle.update();
 
-         // Ball-Paddle collisions
-         if (isColliding(ball, paddle) && ball.getVelocityY() > 0) {
-             ball.setY(paddle.getY() - ball.getDiameter());
-             ball.bounceY();
-         }
-
-         // Ball collisions
-         if (ball.getX() <= 0 || ball.getX() + ball.getDiameter() >= getWidth()) {
-             ball.bounceX();
-         }
-
-         if (ball.getY() <= 0) {
-             ball.bounceY();
-         }
-
-         // Paddle boundaries
-         if (paddle.getX() < 0) {
-             paddle.setX(0);
-         }
-
-         if (paddle.getX() + paddle.getWidth() > getWidth()) {
-             paddle.setX(getWidth() - paddle.getWidth());
-         }
+         handlePaddleCollision();
+         handleBrickCollision();
+         handleWallCollisions();
+         constrainPaddle();
      }
 
     @Override
@@ -60,13 +43,7 @@ class GamePanel extends JPanel {
 
         ball.draw((Graphics2D) g);
         paddle.draw((Graphics2D) g);
-    }
-
-    private boolean isColliding(Ball ball, Paddle paddle) {
-        return ball.getY() + ball.getDiameter() >= paddle.getY() &&
-                ball.getX() + ball.getDiameter() >= paddle.getX() &&
-                ball.getX() <= paddle.getX() + paddle.getWidth() &&
-                ball.getY() <= paddle.getY() + paddle.getHeight();
+        brick.draw((Graphics2D) g);
     }
 
     private void setUpKeyBindings() {
@@ -107,5 +84,74 @@ class GamePanel extends JPanel {
                 paddle.setMovingRight(false);
             }
         });
+    }
+
+    private void handlePaddleCollision() {
+        if (ball.getBounds().intersects(paddle.getBounds()) && ball.getVelocityY() > 0) {
+            ball.setY(paddle.getY() - ball.getDiameter());
+            ball.bounceY();
+        }
+    }
+
+    private void handleBrickCollision() {
+
+         if (!ball.getBounds().intersects(brick.getBounds())) {
+             return;
+         }
+
+         int overlapLeft   = (ball.getX() + ball.getDiameter()) - brick.getX();
+         int overlapRight  = (brick.getX() + brick.getWidth()) - ball.getX();
+         int overlapTop    = (ball.getY() + ball.getDiameter()) - brick.getY();
+         int overlapBottom = (brick.getY() + brick.getHeight()) - ball.getY();
+
+         int horizontalOverlap = Math.min(overlapLeft, overlapRight);
+         int verticalOverlap   = Math.min(overlapTop, overlapBottom);
+
+         if (horizontalOverlap < verticalOverlap) {
+             if (ball.getX() < brick.getX()) {
+                 // ball approached from left side
+                 ball.setX(brick.getX() - ball.getDiameter());
+             } else {
+                 // ball approached from the right side
+                 ball.setX(brick.getX() + brick.getWidth());
+             }
+             ball.bounceX();
+         } else {
+             if (ball.getY() < brick.getY()) {
+                 // ball approached from above
+                 ball.setY(brick.getY() - ball.getDiameter());
+             } else {
+                 // ball approached from below
+                 ball.setY(brick.getY() + brick.getHeight());
+             }
+             ball.bounceY();
+         }
+    }
+
+    private void handleWallCollisions() {
+        if (ball.getX() <= 0) {
+            ball.setX(0);
+            ball.bounceX();
+        }
+
+        if (ball.getX() + ball.getDiameter() >= getWidth()) {
+            ball.setX(getWidth() - ball.getDiameter());
+            ball.bounceX();
+        }
+
+        if (ball.getY() <= 0) {
+            ball.setY(0);
+            ball.bounceY();
+        }
+    }
+
+    private void constrainPaddle() {
+        if (paddle.getX() < 0) {
+            paddle.setX(0);
+        }
+
+        if (paddle.getX() + paddle.getWidth() > getWidth()) {
+            paddle.setX(getWidth() - paddle.getWidth());
+        }
     }
 }

@@ -53,6 +53,10 @@ public class Paddle {
         g.drawString("SR", this.x + (this.width - fm.stringWidth("SR")) / 2, this.y + (this.height - fm.getHeight()) / 2 + fm.getAscent());
     }
 
+    public Rectangle getBounds() {
+        return new Rectangle(this.x, this.y, this.width, this.height);
+    }
+
     public int getX() {
         return this.x;
     }
