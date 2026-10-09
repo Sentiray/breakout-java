@@ -16,6 +16,8 @@ class GamePanel extends JPanel {
      private static final int BRICK_START_X = 13;
      private static final int BRICK_START_Y = 20;
 
+     private static final double TOUGH_BRICK_CHANCE = 0.15;
+
      private int score = 0;
 
      private final Ball ball;
@@ -213,7 +215,11 @@ class GamePanel extends JPanel {
                      color = Color.yellow;
                  }
 
-                 bricks.add(new Brick(x, y, color, points));
+                 if (Math.random() < TOUGH_BRICK_CHANCE) {
+                     bricks.add(new ToughBrick(x, y, color, points));
+                 } else {
+                     bricks.add(new Brick(x, y, color, points));
+                 }
              }
          }
     }
