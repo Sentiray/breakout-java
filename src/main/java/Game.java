@@ -17,6 +17,8 @@ public class Game {
 
     private static final double TOUGH_BRICK_CHANCE = 0.15;
 
+    private static final int PADDLE_BOTTOM_MARGIN = 20;
+
     private int score = 0;
 
     private final Ball ball;
@@ -24,8 +26,8 @@ public class Game {
     private final List<Brick> bricks;
 
     public Game() {
-        ball = new Ball();
-        paddle = new Paddle();
+        paddle = new Paddle((GAME_WIDTH - Paddle.WIDTH)/2, GAME_HEIGHT - Paddle.HEIGHT - PADDLE_BOTTOM_MARGIN);
+        ball = new Ball(paddle.getX() + ((Paddle.WIDTH - Ball.DIAMETER) / 2), paddle.getY() - Ball.DIAMETER);
         bricks = new ArrayList<>();
 
         createBricks();
@@ -41,22 +43,9 @@ public class Game {
         constrainPaddle();
     }
 
-    public void draw(Graphics2D g) {
-
-        ball.draw(g);
-        paddle.draw(g);
-
-        for (Brick brick : bricks) {
-            brick.draw(g);
-        }
-
-        g.setColor(Color.WHITE);
-        g.drawString("Score: " + score, 10, 580);
-    }
-
     private void handlePaddleCollision() {
         if (ball.getBounds().intersects(paddle.getBounds()) && ball.getVelocityY() > 0) {
-            ball.setY(paddle.getY() - ball.getDiameter());
+            ball.setY(paddle.getY() - Ball.DIAMETER);
             ball.bounceY();
         }
     }
@@ -80,9 +69,9 @@ public class Game {
     }
 
     private void resolveBrickCollision(Brick brick) {
-        int overlapLeft   = (ball.getX() + ball.getDiameter()) - brick.getX();
+        int overlapLeft   = (ball.getX() + Ball.DIAMETER) - brick.getX();
         int overlapRight  = (brick.getX() + brick.getWidth()) - ball.getX();
-        int overlapTop    = (ball.getY() + ball.getDiameter()) - brick.getY();
+        int overlapTop    = (ball.getY() + Ball.DIAMETER) - brick.getY();
         int overlapBottom = (brick.getY() + brick.getHeight()) - ball.getY();
 
         int horizontalOverlap = Math.min(overlapLeft, overlapRight);
@@ -91,7 +80,7 @@ public class Game {
         if (horizontalOverlap < verticalOverlap) {
             if (ball.getX() < brick.getX()) {
                 // ball approached from left side
-                ball.setX(brick.getX() - ball.getDiameter());
+                ball.setX(brick.getX() - Ball.DIAMETER);
             } else {
                 // ball approached from the right side
                 ball.setX(brick.getX() + brick.getWidth());
@@ -100,7 +89,7 @@ public class Game {
         } else {
             if (ball.getY() < brick.getY()) {
                 // ball approached from above
-                ball.setY(brick.getY() - ball.getDiameter());
+                ball.setY(brick.getY() - Ball.DIAMETER);
             } else {
                 // ball approached from below
                 ball.setY(brick.getY() + brick.getHeight());
@@ -115,8 +104,8 @@ public class Game {
             ball.bounceX();
         }
 
-        if (ball.getX() + ball.getDiameter() >= GAME_WIDTH) {
-            ball.setX(GAME_WIDTH - ball.getDiameter());
+        if (ball.getX() + Ball.DIAMETER >= GAME_WIDTH) {
+            ball.setX(GAME_WIDTH - Ball.DIAMETER);
             ball.bounceX();
         }
 
@@ -131,8 +120,8 @@ public class Game {
             paddle.setX(0);
         }
 
-        if (paddle.getX() + paddle.getWidth() > GAME_WIDTH) {
-            paddle.setX(GAME_WIDTH - paddle.getWidth());
+        if (paddle.getX() + Paddle.WIDTH > GAME_WIDTH) {
+            paddle.setX(GAME_WIDTH - Paddle.WIDTH);
         }
     }
 
@@ -191,5 +180,21 @@ public class Game {
 
     public void stopMovingRight() {
         paddle.setMovingRight(false);
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public Ball getBall() {
+        return ball;
+    }
+
+    public Paddle getPaddle() {
+        return paddle;
+    }
+
+    public List<Brick> getBricks() {
+        return bricks;
     }
 }

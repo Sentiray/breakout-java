@@ -1,23 +1,19 @@
 import java.awt.*;
 
 public class Ball {
+
+    public static final int DIAMETER = 20;
+
     private int x;
     private int y;
     private int velocityX;
     private int velocityY;
-    private int diameter;
 
-    public Ball() {
-        this.x = 270;
-        this.y = 500;
-        this.diameter = 20;
+    public Ball(int x, int y) {
+        this.x = x;
+        this.y = y;
         this.velocityX = 6;
         this.velocityY = -6;
-    }
-
-    public void draw(Graphics2D g) {
-        g.setColor(Color.white);
-        g.fillOval(this.x, this.y, this.diameter, this.diameter);
     }
 
     public void update() {
@@ -41,10 +37,6 @@ public class Ball {
         return this.y;
     }
 
-    public int getDiameter() {
-        return this.diameter;
-    }
-
     public int getVelocityY() {
         return this.velocityY;
     }
@@ -58,6 +50,6 @@ public class Ball {
     }
 
     public Rectangle getBounds() {
-        return new Rectangle(this.x, this.y, this.diameter, this.diameter);
+        return new Rectangle(this.x, this.y, DIAMETER, DIAMETER);
     }
 }

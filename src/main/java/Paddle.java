@@ -1,20 +1,20 @@
 import java.awt.*;
 
 public class Paddle {
+
+    public static final int WIDTH = 100;
+    public static final int HEIGHT = 20;
+
     private int x;
     private int y;
-    private int width;
-    private int height;
     private int speed;
 
     private boolean movingLeft;
     private boolean movingRight;
 
-    public Paddle() {
-        this.x = 250;
-        this.y = 560;
-        this.width = 100;
-        this.height = 20;
+    public Paddle(int x, int y) {
+        this.x = x;
+        this.y = y;
         this.speed = 8;
     }
 
@@ -44,17 +44,8 @@ public class Paddle {
         this.movingRight = movingRight;
     }
 
-    public void draw(Graphics2D g) {
-        g.setColor(Color.white);
-        g.fillRoundRect(this.x, this.y, this.width, this.height, 2, 2);
-        g.setColor(Color.black);
-        g.setFont(new Font("Arial", Font.BOLD, 18));
-        FontMetrics fm = g.getFontMetrics();
-        g.drawString("SR", this.x + (this.width - fm.stringWidth("SR")) / 2, this.y + (this.height - fm.getHeight()) / 2 + fm.getAscent());
-    }
-
     public Rectangle getBounds() {
-        return new Rectangle(this.x, this.y, this.width, this.height);
+        return new Rectangle(this.x, this.y, WIDTH, HEIGHT);
     }
 
     public int getX() {
@@ -63,14 +54,6 @@ public class Paddle {
 
     public int getY() {
         return this.y;
-    }
-
-    public int getWidth() {
-        return this.width;
-    }
-
-    public int getHeight() {
-        return this.height;
     }
 
     public void setX(int x) {

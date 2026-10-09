@@ -21,15 +21,6 @@ public class Brick {
         this.height = HEIGHT;
     }
 
-    public void draw(Graphics2D g) {
-        g.setColor(color);
-        g.fillRoundRect(this.x, this.y, this.width, this.height, 2, 2);
-        g.setColor(color.darker());
-        g.drawRoundRect(this.x, this.y, this.width, this.height, 2, 2);
-        g.setColor(color.brighter());
-        g.drawLine(this.x + 2, this.y + 2, this.x + this.width - 2, this.y + 2);
-    }
-
     public Rectangle getBounds() {
         return new Rectangle(this.x, this.y, this.width, this.height);
     }
@@ -52,6 +43,10 @@ public class Brick {
 
     public int getPoints() {
         return this.points;
+    }
+
+    public Color getColor() {
+        return this.color;
     }
 
     public boolean hit() { return true; }

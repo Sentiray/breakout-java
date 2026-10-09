@@ -5,10 +5,11 @@ import java.awt.event.ActionEvent;
 class GamePanel extends JPanel {
 
      private final Game game;
+     private final GameRenderer renderer;
 
      public GamePanel() {
-
          game = new Game();
+         renderer = new GameRenderer(game);
 
          this.setPreferredSize(new Dimension(game.getGameWidth(), game.getGameHeight()));
          this.setBackground(new Color(15, 20, 40));
@@ -25,7 +26,7 @@ class GamePanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        game.draw((Graphics2D) g);
+        renderer.draw((Graphics2D) g);
     }
 
     private void setUpKeyBindings() {
