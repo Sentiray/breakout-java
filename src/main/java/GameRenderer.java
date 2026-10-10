@@ -19,7 +19,7 @@ public class GameRenderer {
         // render ball
         Ball ball = game.getBall();
         g.setColor(Color.white);
-        g.fillOval(ball.getX(), ball.getY(), Ball.DIAMETER, Ball.DIAMETER);
+        g.fillOval((int)Math.round(ball.getX()), (int)Math.round(ball.getY()), Ball.DIAMETER, Ball.DIAMETER);
 
         // render paddle
         Paddle paddle = game.getPaddle();

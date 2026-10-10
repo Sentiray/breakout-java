@@ -15,6 +15,9 @@ public class Game {
     private static final int BRICK_START_X = 13;
     private static final int BRICK_START_Y = 20;
 
+    private static final double INFLUENCE_X = 0.75;
+    private static final double MAX_HORIZONTAL_FRACTION = 0.75;
+
     private static final double TOUGH_BRICK_CHANCE = 0.15;
 
     private static final int PADDLE_BOTTOM_MARGIN = 20;
@@ -75,9 +78,39 @@ public class Game {
 
     private void handlePaddleCollision() {
         if (ball.getBounds().intersects(paddle.getBounds()) && ball.getVelocityY() > 0) {
+            applyPaddleBounce();
             ball.setY(paddle.getY() - Ball.DIAMETER);
-            ball.bounceY();
         }
+    }
+
+    private void applyPaddleBounce() {
+        double ballCenter = ball.getX() + Ball.DIAMETER/2.0;
+        double paddleCenter = paddle.getX() + Paddle.WIDTH/2.0;
+        double currentVelocityX = ball.getVelocityX();
+
+        // magnitude of ball's velocity vector
+        double speed = ball.getSpeed();
+
+        // position of ball relative to paddle's center (-1 to +1)
+        double rawHitPosition = (ballCenter - paddleCenter) / (Paddle.WIDTH/2.0);
+        // clamp the result
+        double normalizedHitPosition = Math.clamp(rawHitPosition, -1.0, 1.0);
+
+        // steering influence
+        final double steeringInfluence = speed * normalizedHitPosition * INFLUENCE_X;
+
+        // let new X speed be proportional to ball position on the paddle
+        // while also making it relative to original speed
+        // and limit it by the factors above
+        double candidateVelocityX = currentVelocityX + steeringInfluence;
+        double maxSpeedX = speed * MAX_HORIZONTAL_FRACTION;
+        double newVelocityX = Math.clamp(candidateVelocityX, -maxSpeedX, maxSpeedX);
+        ball.setVelocityX(newVelocityX);
+
+        // calculate new Y speed based on the new X speed
+        // such that the overall speed doesn't change
+        double velocityY = Math.sqrt(speed*speed - newVelocityX*newVelocityX) * -1;
+        ball.setVelocityY(velocityY);
     }
 
     private void handleBrickCollision() {
@@ -99,13 +132,13 @@ public class Game {
     }
 
     private void resolveBrickCollision(Brick brick) {
-        int overlapLeft   = (ball.getX() + Ball.DIAMETER) - brick.getX();
-        int overlapRight  = (brick.getX() + brick.getWidth()) - ball.getX();
-        int overlapTop    = (ball.getY() + Ball.DIAMETER) - brick.getY();
-        int overlapBottom = (brick.getY() + brick.getHeight()) - ball.getY();
+        double overlapLeft   = (ball.getX() + Ball.DIAMETER) - brick.getX();
+        double overlapRight  = (brick.getX() + brick.getWidth()) - ball.getX();
+        double overlapTop    = (ball.getY() + Ball.DIAMETER) - brick.getY();
+        double overlapBottom = (brick.getY() + brick.getHeight()) - ball.getY();
 
-        int horizontalOverlap = Math.min(overlapLeft, overlapRight);
-        int verticalOverlap   = Math.min(overlapTop, overlapBottom);
+        double horizontalOverlap = Math.min(overlapLeft, overlapRight);
+        double verticalOverlap   = Math.min(overlapTop, overlapBottom);
 
         if (horizontalOverlap < verticalOverlap) {
             if (ball.getX() < brick.getX()) {
@@ -240,7 +273,7 @@ public class Game {
     }
 
     private void centerBallOnPaddle() {
-        ball.setX(paddle.getX() + ((Paddle.WIDTH - Ball.DIAMETER) / 2));
+        ball.setX(paddle.getX() + ((Paddle.WIDTH - Ball.DIAMETER) / 2.0));
         ball.setY(paddle.getY() - Ball.DIAMETER);
     }
 
