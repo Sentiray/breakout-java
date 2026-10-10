@@ -61,15 +61,84 @@ public class GameRenderer {
             }
         }
 
-        // render score
+        switch (game.getGameState()) {
+            case READY -> {
+                renderTip(g);
+                renderHUD(g);
+            }
+            case PLAYING -> renderHUD(g);
+            case GAME_OVER -> renderGameOver(g);
+            case WON -> renderGameWon(g);
+        }
+    }
+
+    private void renderHUD(Graphics2D g) {
         g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fmHUD = g.getFontMetrics();
+        // render score
         g.drawString("Score: " + game.getScore(), LEFT_HUD_MARGIN, game.getGameHeight() - BOTTOM_HUD_MARGIN);
 
         // render lives
         String text = "Lives: " + game.getLives();
-        g.setFont(new Font("Arial", Font.BOLD, 18));
-        FontMetrics fmHUD = g.getFontMetrics();
         int textWidth = fmHUD.stringWidth(text);
         g.drawString(text, game.getGameWidth() - RIGHT_HUD_MARGIN - textWidth, game.getGameHeight() - BOTTOM_HUD_MARGIN);
+    }
+
+    private void renderTip(Graphics2D g) {
+        String tipText = "Press UP to launch the ball";
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 24));
+        FontMetrics fmTip = g.getFontMetrics();
+        int tipTextWidth = fmTip.stringWidth(tipText);
+        g.drawString(tipText, (game.getGameWidth()-tipTextWidth)/2, (game.getGameHeight()/2));
+    }
+
+    private void renderGameOver(Graphics2D g) {
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRect(0, 0, game.getGameWidth(), game.getGameHeight());
+
+        // game over text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 48));
+        FontMetrics fmGameOver = g.getFontMetrics();
+        String gameOver = "GAME OVER!";
+        int gameOverWidth = fmGameOver.stringWidth(gameOver);
+        g.drawString(gameOver, (game.getGameWidth()-gameOverWidth)/2, (game.getGameHeight()/3));
+
+        // final score + enter text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 24));
+        FontMetrics fmFinalEnter = g.getFontMetrics();
+        String finalScore = "Final Score: " + game.getScore();
+        int finalScoreWidth = fmFinalEnter.stringWidth(finalScore);
+        g.drawString(finalScore, (game.getGameWidth()-finalScoreWidth)/2, (game.getGameHeight()/2));
+        String enterRestart = "Press ENTER to restart";
+        int enterRestartWidth = fmFinalEnter.stringWidth(enterRestart);
+        g.drawString(enterRestart, (game.getGameWidth()-enterRestartWidth)/2, (game.getGameHeight()/3)*2);
+    }
+
+    private void renderGameWon(Graphics2D g) {
+        g.setColor(new Color(0, 0, 0, 150));
+        g.fillRect(0, 0, game.getGameWidth(), game.getGameHeight());
+
+        // game won text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 48));
+        FontMetrics fmGameWon = g.getFontMetrics();
+        String gameWon = "YOU WIN!";
+        int gameWonWidth = fmGameWon.stringWidth(gameWon);
+        g.drawString(gameWon, (game.getGameWidth()-gameWonWidth)/2, (game.getGameHeight()/3));
+
+        // final score + enter text
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 24));
+        FontMetrics fmFinalEnter = g.getFontMetrics();
+        String finalScore = "Final Score: " + game.getScore();
+        int finalScoreWidth = fmFinalEnter.stringWidth(finalScore);
+        g.drawString(finalScore, (game.getGameWidth()-finalScoreWidth)/2, (game.getGameHeight()/2));
+        String enterRestart = "Press ENTER to restart";
+        int enterRestartWidth = fmFinalEnter.stringWidth(enterRestart);
+        g.drawString(enterRestart, (game.getGameWidth()-enterRestartWidth)/2, (game.getGameHeight()/3)*2);
     }
 }

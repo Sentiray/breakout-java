@@ -42,6 +42,8 @@ class GamePanel extends JPanel {
 
          inputMap.put(KeyStroke.getKeyStroke("pressed UP"), "upPressed");
 
+         inputMap.put(KeyStroke.getKeyStroke("pressed ENTER"), "enterPressed");
+
          actionMap.put("leftPressed", new AbstractAction() {
              @Override
              public void actionPerformed(ActionEvent e) {
@@ -74,6 +76,13 @@ class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 game.launchBall();
+            }
+        });
+
+        actionMap.put("enterPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                game.restartGame();
             }
         });
     }

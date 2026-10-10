@@ -57,7 +57,9 @@ public class Game {
                 handleBrickCollision();
                 handleWallCollisions();
 
-                if (ball.getY() >= GAME_HEIGHT) {
+                if (bricks.isEmpty()) {
+                    gameState = GameState.WON;
+                } else if (ball.getY() >= GAME_HEIGHT) {
                     lives--;
 
                     if (lives > 0) {
@@ -154,6 +156,9 @@ public class Game {
     }
 
     private void createBricks() {
+
+        bricks.clear();
+
         for (int row = 0; row < BRICK_ROWS; row++) {
             for (int col = 0; col < BRICK_COLUMNS; col++) {
 
@@ -250,4 +255,20 @@ public class Game {
         centerBallOnPaddle();
     }
 
+    public void restartGame() {
+        if (gameState == GameState.WON || gameState == GameState.GAME_OVER) {
+            score = 0;
+            lives = STARTING_LIVES;
+            createBricks();
+            paddle.stopMovement();
+            centerPaddle();
+            resetBall();
+            gameState = GameState.READY;
+        }
+    }
+
+    private void centerPaddle() {
+        paddle.setX((GAME_WIDTH - Paddle.WIDTH)/2);
+        paddle.setY(GAME_HEIGHT - Paddle.HEIGHT - PADDLE_BOTTOM_MARGIN);
+    }
 }

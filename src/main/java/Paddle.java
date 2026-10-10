@@ -5,6 +5,8 @@ public class Paddle {
     public static final int WIDTH = 100;
     public static final int HEIGHT = 20;
 
+    private static final int PADDLE_BASE_SPEED = 8;
+
     private int x;
     private int y;
     private int speed;
@@ -15,14 +17,14 @@ public class Paddle {
     public Paddle(int x, int y) {
         this.x = x;
         this.y = y;
-        this.speed = 8;
+        this.speed = PADDLE_BASE_SPEED;
     }
 
-    public void moveLeft() {
+    private void moveLeft() {
         this.x -= this.speed;
     }
 
-    public void moveRight() {
+    private void moveRight() {
         this.x += this.speed;
     }
 
@@ -44,6 +46,11 @@ public class Paddle {
         this.movingRight = movingRight;
     }
 
+    public void stopMovement() {
+        this.movingLeft = false;
+        this.movingRight = false;
+    }
+
     public Rectangle getBounds() {
         return new Rectangle(this.x, this.y, WIDTH, HEIGHT);
     }
@@ -59,4 +66,6 @@ public class Paddle {
     public void setX(int x) {
         this.x = x;
     }
+
+    public void setY(int y) { this.y = y; }
 }
