@@ -4,6 +4,9 @@ public class Ball {
 
     public static final int DIAMETER = 20;
 
+    private static final int INITIAL_VELOCITY_X = 6;
+    private static final int INITIAL_VELOCITY_Y = -6;
+
     private int x;
     private int y;
     private int velocityX;
@@ -12,8 +15,8 @@ public class Ball {
     public Ball(int x, int y) {
         this.x = x;
         this.y = y;
-        this.velocityX = 6;
-        this.velocityY = -6;
+        this.velocityX = INITIAL_VELOCITY_X;
+        this.velocityY = INITIAL_VELOCITY_Y;
     }
 
     public void update() {
@@ -51,5 +54,10 @@ public class Ball {
 
     public Rectangle getBounds() {
         return new Rectangle(this.x, this.y, DIAMETER, DIAMETER);
+    }
+
+    public void resetVelocity() {
+        this.velocityX = INITIAL_VELOCITY_X;
+        this.velocityY = INITIAL_VELOCITY_Y;
     }
 }

@@ -6,6 +6,7 @@ public class GameRenderer {
     private static final int TOUGHBRICK_TEXT_OFFSET = 1;
     private static final int LEFT_HUD_MARGIN = 10;
     private static final int BOTTOM_HUD_MARGIN = 20;
+    private static final int RIGHT_HUD_MARGIN = 10;
 
     private final Game game;
 
@@ -28,8 +29,8 @@ public class GameRenderer {
                         2, 2);
         g.setColor(Color.black);
         g.setFont(new Font("Arial", Font.BOLD, 18));
-        FontMetrics fm = g.getFontMetrics();
-        g.drawString("SR",  paddle.getX() + (Paddle.WIDTH - fm.stringWidth("SR")) / 2, paddle.getY() + (Paddle.HEIGHT - fm.getHeight()) / 2 + fm.getAscent());
+        FontMetrics fmPaddle = g.getFontMetrics();
+        g.drawString("SR",  paddle.getX() + (Paddle.WIDTH - fmPaddle.stringWidth("SR")) / 2, paddle.getY() + (Paddle.HEIGHT - fmPaddle.getHeight()) / 2 + fmPaddle.getAscent());
 
         // render bricks
         List<Brick> bricks = game.getBricks();
@@ -47,10 +48,10 @@ public class GameRenderer {
                 String text = Integer.toString(((ToughBrick) brick).getHitsRemaining());
 
                 g.setFont(new Font("Arial", Font.BOLD, 18));
-                fm = g.getFontMetrics();
+                FontMetrics fmToughBricks = g.getFontMetrics();
 
-                int textX = brick.getX() + ((brick.getWidth() - fm.stringWidth(text)) / 2);
-                int textY = brick.getY() + ((brick.getHeight() - fm.getHeight()) / 2) + fm.getAscent();
+                int textX = brick.getX() + ((brick.getWidth() - fmToughBricks.stringWidth(text)) / 2);
+                int textY = brick.getY() + ((brick.getHeight() - fmToughBricks.getHeight()) / 2) + fmToughBricks.getAscent();
 
                 g.setColor(Color.BLACK);
                 g.drawString(text, textX + TOUGHBRICK_TEXT_OFFSET, textY + TOUGHBRICK_TEXT_OFFSET);
@@ -63,5 +64,12 @@ public class GameRenderer {
         // render score
         g.setColor(Color.WHITE);
         g.drawString("Score: " + game.getScore(), LEFT_HUD_MARGIN, game.getGameHeight() - BOTTOM_HUD_MARGIN);
+
+        // render lives
+        String text = "Lives: " + game.getLives();
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fmHUD = g.getFontMetrics();
+        int textWidth = fmHUD.stringWidth(text);
+        g.drawString(text, game.getGameWidth() - RIGHT_HUD_MARGIN - textWidth, game.getGameHeight() - BOTTOM_HUD_MARGIN);
     }
 }

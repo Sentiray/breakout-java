@@ -19,6 +19,11 @@ public class Game {
 
     private static final int PADDLE_BOTTOM_MARGIN = 20;
 
+    private static final int STARTING_LIVES = 3;
+    private int lives;
+
+    private GameState gameState = GameState.READY;
+
     private int score = 0;
 
     private final Ball ball;
@@ -26,21 +31,44 @@ public class Game {
     private final List<Brick> bricks;
 
     public Game() {
+
         paddle = new Paddle((GAME_WIDTH - Paddle.WIDTH)/2, GAME_HEIGHT - Paddle.HEIGHT - PADDLE_BOTTOM_MARGIN);
         ball = new Ball(paddle.getX() + ((Paddle.WIDTH - Ball.DIAMETER) / 2), paddle.getY() - Ball.DIAMETER);
         bricks = new ArrayList<>();
 
         createBricks();
+        lives = STARTING_LIVES;
     }
 
     public void update() {
-        ball.update();
-        paddle.update();
 
-        handlePaddleCollision();
-        handleBrickCollision();
-        handleWallCollisions();
-        constrainPaddle();
+        switch (gameState) {
+            case READY -> {
+                paddle.update();
+                constrainPaddle();
+                centerBallOnPaddle();
+            }
+
+            case PLAYING -> {
+                paddle.update();
+                constrainPaddle();
+                ball.update();
+                handlePaddleCollision();
+                handleBrickCollision();
+                handleWallCollisions();
+
+                if (ball.getY() >= GAME_HEIGHT) {
+                    lives--;
+
+                    if (lives > 0) {
+                        resetBall();
+                        gameState = GameState.READY;
+                    } else {
+                        gameState = GameState.GAME_OVER;
+                    }
+                }
+            }
+        }
     }
 
     private void handlePaddleCollision() {
@@ -190,6 +218,14 @@ public class Game {
         return ball;
     }
 
+    public int getLives() {
+        return lives;
+    }
+
+    public GameState getGameState() {
+        return gameState;
+    }
+
     public Paddle getPaddle() {
         return paddle;
     }
@@ -197,4 +233,21 @@ public class Game {
     public List<Brick> getBricks() {
         return bricks;
     }
+
+    private void centerBallOnPaddle() {
+        ball.setX(paddle.getX() + ((Paddle.WIDTH - Ball.DIAMETER) / 2));
+        ball.setY(paddle.getY() - Ball.DIAMETER);
+    }
+
+    public void launchBall() {
+        if (gameState == GameState.READY) {
+            gameState = GameState.PLAYING;
+        }
+    }
+
+    private void resetBall() {
+        ball.resetVelocity();
+        centerBallOnPaddle();
+    }
+
 }
