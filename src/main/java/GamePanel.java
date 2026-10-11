@@ -6,6 +6,7 @@ class GamePanel extends JPanel {
 
      private final Game game;
      private final GameRenderer renderer;
+     private boolean debugEnabled = false;
 
      public GamePanel() {
          game = new Game();
@@ -27,6 +28,9 @@ class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         renderer.draw((Graphics2D) g);
+        if (debugEnabled) {
+            renderer.drawDebug((Graphics2D) g);
+        }
     }
 
     private void setUpKeyBindings() {
@@ -43,6 +47,8 @@ class GamePanel extends JPanel {
          inputMap.put(KeyStroke.getKeyStroke("pressed UP"), "upPressed");
 
          inputMap.put(KeyStroke.getKeyStroke("pressed ENTER"), "enterPressed");
+
+         inputMap.put(KeyStroke.getKeyStroke("pressed F5"), "toggleDebug");
 
          actionMap.put("leftPressed", new AbstractAction() {
              @Override
@@ -83,6 +89,13 @@ class GamePanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 game.restartGame();
+            }
+        });
+
+        actionMap.put("toggleDebug", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                debugEnabled = !debugEnabled;
             }
         });
     }

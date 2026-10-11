@@ -25,6 +25,12 @@ public class Game {
 
     private static final int PADDLE_BOTTOM_MARGIN = 20;
 
+    // Debug data
+    private String lastPaddleZone;
+    private double lastBounceFraction;
+    private double lastSpinInfluence;
+    private double lastResultVelocityX;
+
     private static final int STARTING_LIVES = 3;
     private int lives;
 
@@ -97,7 +103,7 @@ public class Game {
         // ball spin
         double spinInfluence = paddle.getMovementDirection() * speed * SPIN_STRENGTH;
 
-        // test involving dividing paddle into six distinct zones instead of a normalized value
+        // test involving dividing paddle into four distinct zones instead of a normalized value
         double zoneWidth = Paddle.WIDTH/4.0;
         double firstBoundary = paddle.getX() + zoneWidth;
         double secondBoundary = paddle.getX() + zoneWidth*2.0;
@@ -110,17 +116,23 @@ public class Game {
         if (ballCenter < paddle.getX()) {
             // extreme bounce left
             bounceFraction = -EDGE_ZONE_FRACTION;
+            lastPaddleZone = "EDGE_LEFT";
         } else if (ballCenter < firstBoundary) {
             bounceFraction = -OUTER_ZONE_FRACTION;
+            lastPaddleZone = "OUTER_LEFT";
         } else if (ballCenter < secondBoundary) {
             bounceFraction = -INNER_ZONE_FRACTION;
+            lastPaddleZone = "INNER_LEFT";
         } else if (ballCenter < thirdBoundary) {
             bounceFraction = INNER_ZONE_FRACTION;
+            lastPaddleZone = "INNER_RIGHT";
         } else if (ballCenter <= fourthBoundary) {
             bounceFraction = OUTER_ZONE_FRACTION;
+            lastPaddleZone = "OUTER_RIGHT";
         } else {
             // extreme bounce right
             bounceFraction = EDGE_ZONE_FRACTION;
+            lastPaddleZone = "EDGE_RIGHT";
         }
 
         double candidateVelocityX = (speed * bounceFraction) + spinInfluence;
@@ -128,6 +140,10 @@ public class Game {
         ball.setVelocityX(newVelocityX);
         double velocityY = Math.sqrt(speed*speed - newVelocityX*newVelocityX) * -1;
         ball.setVelocityY(velocityY);
+
+        lastBounceFraction = bounceFraction;
+        lastSpinInfluence = spinInfluence;
+        lastResultVelocityX = newVelocityX;
 
     }
 
@@ -321,5 +337,21 @@ public class Game {
     private void centerPaddle() {
         paddle.setX((GAME_WIDTH - Paddle.WIDTH)/2);
         paddle.setY(GAME_HEIGHT - Paddle.HEIGHT - PADDLE_BOTTOM_MARGIN);
+    }
+
+    public String getLastPaddleZone() {
+        return lastPaddleZone;
+    }
+
+    public double getLastBounceFraction() {
+        return lastBounceFraction;
+    }
+
+    public double getLastSpinInfluence() {
+        return lastSpinInfluence;
+    }
+
+    public double getLastResultVelocityX() {
+        return lastResultVelocityX;
     }
 }

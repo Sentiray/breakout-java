@@ -7,6 +7,9 @@ public class GameRenderer {
     private static final int LEFT_HUD_MARGIN = 10;
     private static final int BOTTOM_HUD_MARGIN = 20;
     private static final int RIGHT_HUD_MARGIN = 10;
+    private static final int DEBUG_BLOCK_STARTING_OFFSET_BOTTOM = 260;
+    private static final int DEBUG_LINE_SPACING = 30;
+    private static final int DEBUG_SECTION_SPACING = 60;
 
     private final Game game;
 
@@ -29,8 +32,6 @@ public class GameRenderer {
                         2, 2);
         g.setColor(Color.black);
         g.setFont(new Font("Arial", Font.BOLD, 18));
-        FontMetrics fmPaddle = g.getFontMetrics();
-        g.drawString("SR",  paddle.getX() + (Paddle.WIDTH - fmPaddle.stringWidth("SR")) / 2, paddle.getY() + (Paddle.HEIGHT - fmPaddle.getHeight()) / 2 + fmPaddle.getAscent());
 
         // render bricks
         List<Brick> bricks = game.getBricks();
@@ -70,6 +71,79 @@ public class GameRenderer {
             case GAME_OVER -> renderGameOver(g);
             case WON -> renderGameWon(g);
         }
+    }
+
+    public void drawDebug(Graphics2D g) {
+
+        // render paddle zones
+        Paddle paddle = game.getPaddle();
+        double zoneWidth = Paddle.WIDTH/4.0;
+        double firstBoundary = paddle.getX() + zoneWidth;
+        double secondBoundary = paddle.getX() + zoneWidth*2;
+        double thirdBoundary = paddle.getX() + zoneWidth*3;
+        double fourthBoundary = paddle.getX() + Paddle.WIDTH;
+
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fmDebugZone = g.getFontMetrics();
+
+        g.setColor(new Color(255, 0, 0, 140));
+        g.fillRect(paddle.getX(), paddle.getY(), (int)zoneWidth, Paddle.HEIGHT);
+
+        g.setColor(new Color(226, 206, 23, 140));
+        g.fillRect(paddle.getX()+(int)zoneWidth, paddle.getY(), (int)zoneWidth, Paddle.HEIGHT);
+
+        g.setColor(new Color(0, 255, 0, 140));
+        g.fillRect(paddle.getX()+(int)zoneWidth*2, paddle.getY(), (int)zoneWidth, Paddle.HEIGHT);
+
+        g.setColor(new Color(0, 0, 255, 140));
+        g.fillRect(paddle.getX()+(int)zoneWidth*3, paddle.getY(), (int)zoneWidth, Paddle.HEIGHT);
+
+        Stroke oldStroke = g.getStroke();
+
+        g.setColor(new Color(20, 20, 20));
+        g.setStroke(new BasicStroke(2.0f));
+
+        g.drawLine(paddle.getX(), paddle.getY(), paddle.getX(), paddle.getY()+Paddle.HEIGHT);
+        g.drawLine((int)firstBoundary, paddle.getY(), (int)firstBoundary, paddle.getY()+Paddle.HEIGHT);
+        g.drawLine((int)secondBoundary, paddle.getY(), (int)secondBoundary, paddle.getY()+Paddle.HEIGHT);
+        g.drawLine((int)thirdBoundary, paddle.getY(), (int)thirdBoundary, paddle.getY()+Paddle.HEIGHT);
+        g.drawLine((int)fourthBoundary, paddle.getY(), (int)fourthBoundary, paddle.getY()+Paddle.HEIGHT);
+
+        g.setColor(new Color(255, 255, 255, 234));
+        g.drawRect(paddle.getX(), paddle.getY(), Paddle.WIDTH, Paddle.HEIGHT);
+
+        g.setStroke(oldStroke);
+
+        // render debug data
+        Ball ball = game.getBall();
+        double velocityX = ball.getVelocityX();
+        double velocityY = ball.getVelocityY();
+        double speed = ball.getSpeed();
+        String lastPaddleZone = game.getLastPaddleZone();
+        double lastBounceFraction = game.getLastBounceFraction();
+        double lastSpinInfluence = game.getLastSpinInfluence();
+        double lastResultVelocityX = game.getLastResultVelocityX();
+
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fmDebugData = g.getFontMetrics();
+
+        int currentY = game.getGameHeight() - DEBUG_BLOCK_STARTING_OFFSET_BOTTOM;
+        // live data
+        g.drawString("Speed: " + String.format("%.2f", speed), LEFT_HUD_MARGIN, currentY);
+        currentY += DEBUG_LINE_SPACING;
+        g.drawString("Velocity: (" + String.format("%.2f", velocityX) + ", " + String.format("%.2f", velocityY) + ")", LEFT_HUD_MARGIN, currentY);
+
+        currentY += DEBUG_SECTION_SPACING;
+        // last-hit data
+        g.drawString("Last Zone: " + lastPaddleZone, LEFT_HUD_MARGIN, currentY);
+        currentY += DEBUG_LINE_SPACING;
+        g.drawString("Fraction: " + String.format("%.2f", lastBounceFraction), LEFT_HUD_MARGIN, currentY);
+        currentY += DEBUG_LINE_SPACING;
+        g.drawString("Spin: " + String.format("%.2f", lastSpinInfluence), LEFT_HUD_MARGIN, currentY);
+        currentY += DEBUG_LINE_SPACING;
+        g.drawString("Result X: " + String.format("%.2f", lastResultVelocityX), LEFT_HUD_MARGIN, currentY);
+
+
     }
 
     private void renderHUD(Graphics2D g) {
