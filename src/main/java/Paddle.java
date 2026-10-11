@@ -14,10 +14,13 @@ public class Paddle {
     private boolean movingLeft;
     private boolean movingRight;
 
+    private int previousX;
+
     public Paddle(int x, int y) {
         this.x = x;
         this.y = y;
         this.speed = PADDLE_BASE_SPEED;
+        this.previousX = this.x;
     }
 
     private void moveLeft() {
@@ -29,6 +32,7 @@ public class Paddle {
     }
 
     public void update() {
+        previousX = this.x;
         if (movingLeft) {
             moveLeft();
         }
@@ -68,4 +72,8 @@ public class Paddle {
     }
 
     public void setY(int y) { this.y = y; }
+
+    public int getMovementDirection() {
+        return Integer.compare(this.x, previousX);
+    }
 }
