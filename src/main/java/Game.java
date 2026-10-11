@@ -5,6 +5,12 @@ import java.util.List;
 
 public class Game {
 
+    private static final double MAX_HORIZONTAL_FRACTION = 0.90;
+    private static final double SPIN_STRENGTH = 0.20;
+    private static final double EDGE_ZONE_FRACTION = 0.75;
+    private static final double OUTER_ZONE_FRACTION = 0.60;
+    private static final double INNER_ZONE_FRACTION = 0.35;
+
     private static final int GAME_WIDTH = 800;
     private static final int GAME_HEIGHT = 600;
 
@@ -14,10 +20,6 @@ public class Game {
     private static final int BRICK_GAP = 2;
     private static final int BRICK_START_X = 13;
     private static final int BRICK_START_Y = 20;
-
-    private static final double PADDLE_STEERING_STRENGTH = 0.75;
-    private static final double MAX_HORIZONTAL_FRACTION = 0.75;
-    private static final double SPIN_STRENGTH = 0.20;
 
     private static final double TOUGH_BRICK_CHANCE = 0.15;
 
@@ -86,9 +88,8 @@ public class Game {
 
     private void applyPaddleBounce() {
         // paddle steering inspired by https://gamedev.stackexchange.com/questions/20456/a-more-sophisticated-ball-paddle-collision-algorithm-for-breakout
+        // and also the super breakout atari version https://www.ataricompendium.com/archives/manuals/5200/super_breakout.pdf
         double ballCenter = ball.getX() + Ball.DIAMETER/2.0;
-        double paddleCenter = paddle.getX() + Paddle.WIDTH/2.0;
-        double currentVelocityX = ball.getVelocityX();
 
         // magnitude of ball's velocity vector
         double speed = ball.getSpeed();
@@ -96,26 +97,38 @@ public class Game {
         // ball spin
         double spinInfluence = paddle.getMovementDirection() * speed * SPIN_STRENGTH;
 
-        // position of ball relative to paddle's center (-1 to +1)
-        double rawHitPosition = (ballCenter - paddleCenter) / (Paddle.WIDTH/2.0);
-        // clamp the result
-        double normalizedHitPosition = Math.clamp(rawHitPosition, -1.0, 1.0);
+        // test involving dividing paddle into six distinct zones instead of a normalized value
+        double zoneWidth = Paddle.WIDTH/4.0;
+        double firstBoundary = paddle.getX() + zoneWidth;
+        double secondBoundary = paddle.getX() + zoneWidth*2.0;
+        double thirdBoundary = paddle.getX() + zoneWidth*3.0;
+        double fourthBoundary = paddle.getX() + Paddle.WIDTH;
 
-        // steering influence
-        final double steeringInfluence = speed * normalizedHitPosition * PADDLE_STEERING_STRENGTH;
-
-        // let new X speed be proportional to ball position on the paddle
-        // while also making it relative to original speed
-        // and limit it by the factors above
-        double candidateVelocityX = currentVelocityX + steeringInfluence + spinInfluence;
         double maxSpeedX = speed * MAX_HORIZONTAL_FRACTION;
+        double bounceFraction;
+
+        if (ballCenter < paddle.getX()) {
+            // extreme bounce left
+            bounceFraction = -EDGE_ZONE_FRACTION;
+        } else if (ballCenter < firstBoundary) {
+            bounceFraction = -OUTER_ZONE_FRACTION;
+        } else if (ballCenter < secondBoundary) {
+            bounceFraction = -INNER_ZONE_FRACTION;
+        } else if (ballCenter < thirdBoundary) {
+            bounceFraction = INNER_ZONE_FRACTION;
+        } else if (ballCenter <= fourthBoundary) {
+            bounceFraction = OUTER_ZONE_FRACTION;
+        } else {
+            // extreme bounce right
+            bounceFraction = EDGE_ZONE_FRACTION;
+        }
+
+        double candidateVelocityX = (speed * bounceFraction) + spinInfluence;
         double newVelocityX = Math.clamp(candidateVelocityX, -maxSpeedX, maxSpeedX);
         ball.setVelocityX(newVelocityX);
-
-        // calculate new Y speed based on the new X speed
-        // such that the overall speed doesn't change
         double velocityY = Math.sqrt(speed*speed - newVelocityX*newVelocityX) * -1;
         ball.setVelocityY(velocityY);
+
     }
 
     private void handleBrickCollision() {
