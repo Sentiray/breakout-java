@@ -30,6 +30,8 @@ public class Game {
     private double lastBounceFraction;
     private double lastSpinInfluence;
     private double lastResultVelocityX;
+    private BrickCollisionSnapshot lastBrickCollision;
+    private List<BrickBoundsSnapshot> lastOverlappingBricks;
 
     private static final int STARTING_LIVES = 3;
     private int lives;
@@ -50,6 +52,7 @@ public class Game {
 
         createBricks();
         lives = STARTING_LIVES;
+        lastOverlappingBricks = new ArrayList<>();
     }
 
     public void update() {
@@ -149,14 +152,30 @@ public class Game {
 
     private void handleBrickCollision() {
 
+        // gather overlap data for debugging
+        List<BrickBoundsSnapshot> tempList = new ArrayList<>();
+        for (Brick brick : bricks) {
+            if (ball.getBounds().intersects(brick.getBounds())) {
+                BrickBoundsSnapshot boundsSnapshot = new BrickBoundsSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight());
+                tempList.add(boundsSnapshot);
+            }
+        }
+        if (!tempList.isEmpty()) {
+            lastOverlappingBricks = tempList;
+        }
+
         Iterator<Brick> iterator = bricks.iterator();
 
         while (iterator.hasNext()) {
             Brick brick = iterator.next();
 
             if (ball.getBounds().intersects(brick.getBounds())){
-                resolveBrickCollision(brick);
-                if (brick.hit()) {
+                CollisionResolution collisionResolution = resolveBrickCollision(brick);
+                boolean destroyed = brick.hit();
+                lastBrickCollision = new BrickCollisionSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight(),
+                        collisionResolution.collisionAxis(), collisionResolution.horizontalOverlap(),
+                        collisionResolution.verticalOverlap(), destroyed);
+                if (destroyed) {
                     score += brick.getPoints();
                     iterator.remove();
                 }
@@ -165,7 +184,7 @@ public class Game {
         }
     }
 
-    private void resolveBrickCollision(Brick brick) {
+    private CollisionResolution resolveBrickCollision(Brick brick) {
         double overlapLeft   = (ball.getX() + Ball.DIAMETER) - brick.getX();
         double overlapRight  = (brick.getX() + brick.getWidth()) - ball.getX();
         double overlapTop    = (ball.getY() + Ball.DIAMETER) - brick.getY();
@@ -183,6 +202,7 @@ public class Game {
                 ball.setX(brick.getX() + brick.getWidth());
             }
             ball.bounceX();
+            return new CollisionResolution(CollisionAxis.X, horizontalOverlap, verticalOverlap);
         } else {
             if (ball.getY() < brick.getY()) {
                 // ball approached from above
@@ -192,6 +212,7 @@ public class Game {
                 ball.setY(brick.getY() + brick.getHeight());
             }
             ball.bounceY();
+            return new CollisionResolution(CollisionAxis.Y, horizontalOverlap, verticalOverlap);
         }
     }
 
@@ -354,4 +375,14 @@ public class Game {
     public double getLastResultVelocityX() {
         return lastResultVelocityX;
     }
+
+    public BrickCollisionSnapshot getLastBrickCollision() {
+        return lastBrickCollision;
+    }
+
+    public List<BrickBoundsSnapshot> getLastOverlappingBricks() {
+        return lastOverlappingBricks;
+    }
+
+
 }

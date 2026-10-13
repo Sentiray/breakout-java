@@ -141,8 +141,63 @@ public class GameRenderer {
         currentY += DEBUG_LINE_SPACING;
         g.drawString("Spin: " + String.format("%.2f", lastSpinInfluence), LEFT_HUD_MARGIN, currentY);
         currentY += DEBUG_LINE_SPACING;
-        g.drawString("Result X: " + String.format("%.2f", lastResultVelocityX), LEFT_HUD_MARGIN, currentY);
+        g.drawString("Last Paddle X: " + String.format("%.2f", lastResultVelocityX), LEFT_HUD_MARGIN, currentY);
 
+        // render brick collision data
+        String axisMarker = "X";
+        g.setFont(new Font("Arial", Font.BOLD, 18));
+        FontMetrics fmBrickDebugData = g.getFontMetrics();
+
+        BrickCollisionSnapshot snapshot = game.getLastBrickCollision();
+        List<BrickBoundsSnapshot> boundsSnapshots = game.getLastOverlappingBricks();
+
+        if (snapshot != null) {
+
+            // draw yellow outline of all bricks that collide with ball
+            g.setColor(Color.YELLOW);
+            for (BrickBoundsSnapshot boundsSnapshot : boundsSnapshots) {
+                g.drawRect(boundsSnapshot.x(), boundsSnapshot.y(), boundsSnapshot.width(), boundsSnapshot.height());
+            }
+
+            // draw red outline around bricks that trigger a resolution
+            int destroyedBrickX = snapshot.x() + ((snapshot.width() - fmBrickDebugData.stringWidth(axisMarker)) / 2);
+            int destroyedBrickY = snapshot.y() + ((snapshot.height() - fmBrickDebugData.getHeight()) / 2) + fmBrickDebugData.getAscent();
+
+            g.setColor(Color.RED);
+            if (snapshot.destroyed()) {
+                g.drawRect(snapshot.x(), snapshot.y(), snapshot.width(), snapshot.height());
+                g.drawLine(snapshot.x(), snapshot.y() + snapshot.height(), snapshot.x() + snapshot.width(), snapshot.y());
+            } else {
+                g.drawRect(snapshot.x(), snapshot.y(), snapshot.width(), snapshot.height());
+            }
+
+            // red X and Y to display which axis resolver chose
+            g.setColor(Color.YELLOW);
+            if (snapshot.collisionAxis() == CollisionAxis.X) {
+                g.drawString("X", destroyedBrickX, destroyedBrickY);
+            } else if (snapshot.collisionAxis() == CollisionAxis.Y) {
+                g.drawString("Y", destroyedBrickX, destroyedBrickY);
+            }
+
+            g.setColor(Color.WHITE);
+
+            currentY = game.getGameHeight() - DEBUG_BLOCK_STARTING_OFFSET_BOTTOM;
+            String text = "Brick Axis: " + snapshot.collisionAxis();
+            int debugTextWidth = fmDebugData.stringWidth(text);
+            g.drawString(text, game.getGameWidth() - RIGHT_HUD_MARGIN - debugTextWidth, currentY);
+            currentY += DEBUG_LINE_SPACING;
+            text = "H Overlap: " + String.format("%.2f", snapshot.horizontalOverlap());
+            debugTextWidth = fmDebugData.stringWidth(text);
+            g.drawString(text, game.getGameWidth() - RIGHT_HUD_MARGIN - debugTextWidth, currentY);
+            currentY += DEBUG_LINE_SPACING;
+            text = "V Overlap: " + String.format("%.2f", snapshot.verticalOverlap());
+            debugTextWidth = fmDebugData.stringWidth(text);
+            g.drawString(text, game.getGameWidth() - RIGHT_HUD_MARGIN - debugTextWidth, currentY);
+            currentY += DEBUG_SECTION_SPACING;
+            text = "Overlapping Bricks: " + boundsSnapshots.size();
+            debugTextWidth = fmDebugData.stringWidth(text);
+            g.drawString(text, game.getGameWidth() - RIGHT_HUD_MARGIN - debugTextWidth, currentY);
+        }
 
     }
 
