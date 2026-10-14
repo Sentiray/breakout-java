@@ -25,6 +25,8 @@ public class Game {
 
     private static final int PADDLE_BOTTOM_MARGIN = 20;
 
+    private long updateNumber = 0;
+
     // Debug data
     private String lastPaddleZone;
     private double lastBounceFraction;
@@ -32,6 +34,7 @@ public class Game {
     private double lastResultVelocityX;
     private BrickCollisionSnapshot lastBrickCollision;
     private List<BrickBoundsSnapshot> lastOverlappingBricks;
+    private final DebugLogger debugLogger;
 
     private static final int STARTING_LIVES = 3;
     private int lives;
@@ -53,9 +56,12 @@ public class Game {
         createBricks();
         lives = STARTING_LIVES;
         lastOverlappingBricks = new ArrayList<>();
+        debugLogger = new DebugLogger();
     }
 
     public void update() {
+
+        updateNumber++;
 
         switch (gameState) {
             case READY -> {
@@ -164,13 +170,22 @@ public class Game {
             lastOverlappingBricks = tempList;
         }
 
+
         Iterator<Brick> iterator = bricks.iterator();
 
         while (iterator.hasNext()) {
             Brick brick = iterator.next();
 
-            if (ball.getBounds().intersects(brick.getBounds())){
+            if (ball.getBounds().intersects(brick.getBounds())) {
+                double ballBeforeX = ball.getX();
+                double ballBeforeY = ball.getY();
+                double ballBeforeVX = ball.getVelocityX();
+                double ballBeforeVY = ball.getVelocityY();
                 CollisionResolution collisionResolution = resolveBrickCollision(brick);
+                double ballAfterX = ball.getX();
+                double ballAfterY = ball.getY();
+                double ballAfterVX = ball.getVelocityX();
+                double ballAfterVY = ball.getVelocityY();
                 boolean destroyed = brick.hit();
                 lastBrickCollision = new BrickCollisionSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight(),
                         collisionResolution.collisionAxis(), collisionResolution.horizontalOverlap(),
@@ -179,6 +194,11 @@ public class Game {
                     score += brick.getPoints();
                     iterator.remove();
                 }
+                BrickCollisionLogEntry entry = new BrickCollisionLogEntry(updateNumber, ballBeforeX, ballBeforeY, ballBeforeVX, ballBeforeVY,
+                                                                    tempList, brick.getX(), brick.getY(), collisionResolution.collisionAxis(),
+                                                                    collisionResolution.horizontalOverlap(), collisionResolution.verticalOverlap(),
+                                                                    destroyed, ballAfterX, ballAfterY, ballAfterVX, ballAfterVY);
+                debugLogger.logBrickCollision(entry);
                 break; // Only resolve first collision if ball overlaps two bricks during the same update
             }
         }
