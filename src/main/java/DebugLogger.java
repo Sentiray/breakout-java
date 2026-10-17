@@ -10,8 +10,8 @@ public class DebugLogger {
     public DebugLogger() {
 
         this.csvHeader = "updateNumber,ballBeforeX,ballBeforeY,ballBeforeVX,ballBeforeVY," +
-                "overlappingBricks,brickX,brickY,axis,horizontalOverlap,verticalOverlap," +
-                "destroyed,ballAfterX,ballAfterY,ballAfterVX,ballAfterVY";
+                "overlappingBricks,surfaceX,surfaceY,surfaceWidth,surfaceHeight,axis,horizontalOverlap,verticalOverlap," +
+                "hitResults,ballAfterX,ballAfterY,ballAfterVX,ballAfterVY";
 
         try {
             FileWriter fileWriter = new FileWriter("brick-collisions.csv");
@@ -29,11 +29,16 @@ public class DebugLogger {
         }
         try {
             StringBuilder brickData = new StringBuilder();
+            StringBuilder hitResultData = new StringBuilder();
             for (BrickBoundsSnapshot brick : entry.overlappingBricks()) {
                 brickData.append(brick.x() + ":" + brick.y() + ":" +  brick.width() + ":" + brick.height() + ";");
             }
+            for (BrickHitResult hitResult : entry.hitResults()) {
+                hitResultData.append(hitResult.bounds().x()).append(":").append(hitResult.bounds().y()).append(":").append(hitResult.bounds().width()).append(":").append(hitResult.bounds().height()).append(":").append(hitResult.destroyed()).append(";");
+            }
             String brickResult = brickData.toString();
-            String csvEntry = getCsvRow(entry, brickResult);
+            String hitResult = hitResultData.toString();
+            String csvEntry = getCsvRow(entry, brickResult, hitResult);
             writer.write(csvEntry + System.lineSeparator());
             writer.flush();
         } catch (IOException e) {
@@ -41,9 +46,9 @@ public class DebugLogger {
         }
     }
 
-    private String getCsvRow(BrickCollisionLogEntry entry, String brickData) {
+    private String getCsvRow(BrickCollisionLogEntry entry, String brickData, String hitResult) {
         return entry.updateNumber() + "," + entry.ballBeforeX() + "," + entry.ballBeforeY() + "," + entry.ballBeforeVX() + "," +
-                                         entry.ballBeforeVY() + "," + brickData + "," + entry.brickX() + "," + entry.brickY() + "," + entry.axis() + "," + entry.horizontalOverlap() + "," +
-                                         entry.verticalOverlap() + "," + entry.destroyed() + "," + entry.ballAfterX() + "," + entry.ballAfterY() + "," + entry.ballAfterVX() + "," + entry.ballAfterVY();
+                                         entry.ballBeforeVY() + "," + brickData + "," + entry.surfaceX() + "," + entry.surfaceY() + "," + entry.surfaceWidth() + "," + entry.surfaceHeight() + "," + entry.axis() + "," + entry.horizontalOverlap() + "," +
+                                         entry.verticalOverlap() + "," + hitResult + "," + entry.ballAfterX() + "," + entry.ballAfterY() + "," + entry.ballAfterVX() + "," + entry.ballAfterVY();
     }
 }

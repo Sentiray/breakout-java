@@ -1,5 +1,6 @@
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -158,7 +159,54 @@ public class Game {
 
     private void handleBrickCollision() {
 
-        // gather overlap data for debugging
+
+        List<Brick> overlappingBricks = new ArrayList<>();
+        for (Brick brick : bricks) {
+            if (ball.getBounds().intersects(brick.getBounds())) {
+                overlappingBricks.add(brick);
+            }
+        }
+
+
+        // create snapshot for debugging
+        List<BrickBoundsSnapshot> snapshotList = new ArrayList<>();
+        for (Brick brick : overlappingBricks) {
+            BrickBoundsSnapshot brickBoundsSnapshot = new BrickBoundsSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight());
+            snapshotList.add(brickBoundsSnapshot);
+        }
+        if (!snapshotList.isEmpty()) {
+            lastOverlappingBricks = snapshotList;
+        }
+
+
+
+        if (isHorizontalGroup(overlappingBricks)) {
+
+            List<Brick> sortedBricks = new ArrayList<>(overlappingBricks);
+            sortedBricks.sort(Comparator.comparingInt(Brick::getX));
+
+            double combinedX = sortedBricks.getFirst().getX();
+            double combinedY = sortedBricks.getFirst().getY();
+            double combinedRight = sortedBricks.getLast().getX() + sortedBricks.getLast().getWidth();
+            double combinedWidth = combinedRight - combinedX;
+            double combinedHeight = sortedBricks.getFirst().getHeight();
+
+            handleGroupedCollision(combinedX, combinedY, combinedWidth, combinedHeight, sortedBricks, snapshotList);
+
+        } else if (isVerticalGroup(overlappingBricks)) {
+
+            List<Brick> sortedBricks = new ArrayList<>(overlappingBricks);
+            sortedBricks.sort(Comparator.comparingInt(Brick::getY));
+
+            double combinedX = sortedBricks.getFirst().getX();
+            double combinedY = sortedBricks.getFirst().getY();
+            double combinedWidth = sortedBricks.getFirst().getWidth();
+            double combinedHeight = sortedBricks.getLast().getY() + sortedBricks.getLast().getHeight() - sortedBricks.getFirst().getY();
+
+            handleGroupedCollision(combinedX, combinedY, combinedWidth, combinedHeight, sortedBricks, snapshotList);
+        } else {
+
+        /*
         List<BrickBoundsSnapshot> tempList = new ArrayList<>();
         for (Brick brick : bricks) {
             if (ball.getBounds().intersects(brick.getBounds())) {
@@ -169,71 +217,101 @@ public class Game {
         if (!tempList.isEmpty()) {
             lastOverlappingBricks = tempList;
         }
+        */
+
+            Iterator<Brick> iterator = bricks.iterator();
+
+            while (iterator.hasNext()) {
+                Brick brick = iterator.next();
+
+                if (ball.getBounds().intersects(brick.getBounds())) {
+
+                    double ballBeforeX = ball.getX();
+                    double ballBeforeY = ball.getY();
+                    double ballBeforeVX = ball.getVelocityX();
+                    double ballBeforeVY = ball.getVelocityY();
+
+                    CollisionResolution collisionResolution = resolveBrickCollision(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight());
+
+                    if (collisionResolution == null) {
+                        continue;
+                    }
+
+                    double ballAfterX = ball.getX();
+                    double ballAfterY = ball.getY();
+                    double ballAfterVX = ball.getVelocityX();
+                    double ballAfterVY = ball.getVelocityY();
 
 
-        Iterator<Brick> iterator = bricks.iterator();
+                    boolean destroyed = brick.hit();
 
-        while (iterator.hasNext()) {
-            Brick brick = iterator.next();
+                    BrickBoundsSnapshot bounds = new BrickBoundsSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight());
+                    List<BrickHitResult> hitResults = List.of(new BrickHitResult(bounds, destroyed));
 
-            if (ball.getBounds().intersects(brick.getBounds())) {
-                double ballBeforeX = ball.getX();
-                double ballBeforeY = ball.getY();
-                double ballBeforeVX = ball.getVelocityX();
-                double ballBeforeVY = ball.getVelocityY();
-                CollisionResolution collisionResolution = resolveBrickCollision(brick);
-                double ballAfterX = ball.getX();
-                double ballAfterY = ball.getY();
-                double ballAfterVX = ball.getVelocityX();
-                double ballAfterVY = ball.getVelocityY();
-                boolean destroyed = brick.hit();
-                lastBrickCollision = new BrickCollisionSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight(),
-                        collisionResolution.collisionAxis(), collisionResolution.horizontalOverlap(),
-                        collisionResolution.verticalOverlap(), destroyed);
-                if (destroyed) {
-                    score += brick.getPoints();
-                    iterator.remove();
+                    lastBrickCollision = new BrickCollisionSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight(),
+                            collisionResolution.collisionAxis(), collisionResolution.horizontalOverlap(),
+                            collisionResolution.verticalOverlap(), hitResults);
+
+                    if (destroyed) {
+                        score += brick.getPoints();
+                        iterator.remove();
+                    }
+
+                    BrickCollisionLogEntry entry = new BrickCollisionLogEntry(updateNumber, ballBeforeX, ballBeforeY, ballBeforeVX, ballBeforeVY,
+                            snapshotList, brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight(), collisionResolution.collisionAxis(),
+                            collisionResolution.horizontalOverlap(), collisionResolution.verticalOverlap(),
+                            hitResults, ballAfterX, ballAfterY, ballAfterVX, ballAfterVY);
+                    debugLogger.logBrickCollision(entry);
+                    break; // Only resolve first collision if ball overlaps two bricks during the same update
                 }
-                BrickCollisionLogEntry entry = new BrickCollisionLogEntry(updateNumber, ballBeforeX, ballBeforeY, ballBeforeVX, ballBeforeVY,
-                                                                    tempList, brick.getX(), brick.getY(), collisionResolution.collisionAxis(),
-                                                                    collisionResolution.horizontalOverlap(), collisionResolution.verticalOverlap(),
-                                                                    destroyed, ballAfterX, ballAfterY, ballAfterVX, ballAfterVY);
-                debugLogger.logBrickCollision(entry);
-                break; // Only resolve first collision if ball overlaps two bricks during the same update
             }
         }
     }
 
-    private CollisionResolution resolveBrickCollision(Brick brick) {
-        double overlapLeft   = (ball.getX() + Ball.DIAMETER) - brick.getX();
-        double overlapRight  = (brick.getX() + brick.getWidth()) - ball.getX();
-        double overlapTop    = (ball.getY() + Ball.DIAMETER) - brick.getY();
-        double overlapBottom = (brick.getY() + brick.getHeight()) - ball.getY();
+    private CollisionResolution resolveBrickCollision(double x, double y, double width, double height) {
+        double overlapLeft   = (ball.getX() + Ball.DIAMETER) - x;
+        double overlapRight  = (x + width) - ball.getX();
+        double overlapTop    = (ball.getY() + Ball.DIAMETER) - y;
+        double overlapBottom = (y + height) - ball.getY();
 
         double horizontalOverlap = Math.min(overlapLeft, overlapRight);
         double verticalOverlap   = Math.min(overlapTop, overlapBottom);
 
         if (horizontalOverlap < verticalOverlap) {
-            if (ball.getX() < brick.getX()) {
-                // ball approached from left side
-                ball.setX(brick.getX() - Ball.DIAMETER);
+            if (ball.getX() < x) {
+                // ball is on the left side of the brick
+                if (ball.getVelocityX() > 0) {
+                    ball.setX(x - Ball.DIAMETER);
+                    ball.bounceX();
+                    return new CollisionResolution(CollisionAxis.X, horizontalOverlap, verticalOverlap);
+                }
             } else {
-                // ball approached from the right side
-                ball.setX(brick.getX() + brick.getWidth());
+                // ball is on the right side of the brick
+                if (ball.getVelocityX() < 0) {
+                    ball.setX(x + width);
+                    ball.bounceX();
+                    return new CollisionResolution(CollisionAxis.X, horizontalOverlap, verticalOverlap);
+                }
             }
-            ball.bounceX();
-            return new CollisionResolution(CollisionAxis.X, horizontalOverlap, verticalOverlap);
         } else {
-            if (ball.getY() < brick.getY()) {
-                // ball approached from above
-                ball.setY(brick.getY() - Ball.DIAMETER);
+            if (ball.getY() < y) {
+                // ball is above the brick
+                if (ball.getVelocityY() > 0) {
+                    ball.setY(y - Ball.DIAMETER);
+                    ball.bounceY();
+                    return new CollisionResolution(CollisionAxis.Y, horizontalOverlap, verticalOverlap);
+                }
             } else {
-                // ball approached from below
-                ball.setY(brick.getY() + brick.getHeight());
+                // ball is below the brick
+                if (ball.getVelocityY() < 0) {
+                    ball.setY(y + height);
+                    ball.bounceY();
+                    return new CollisionResolution(CollisionAxis.Y, horizontalOverlap, verticalOverlap);
+                }
             }
-            ball.bounceY();
-            return new CollisionResolution(CollisionAxis.Y, horizontalOverlap, verticalOverlap);
         }
+        // (temp) no impact -> return null
+        return null;
     }
 
     private void handleWallCollisions() {
@@ -402,6 +480,113 @@ public class Game {
 
     public List<BrickBoundsSnapshot> getLastOverlappingBricks() {
         return lastOverlappingBricks;
+    }
+
+    private boolean isHorizontalGroup(List<Brick> overLappingBricks) {
+
+        if (overLappingBricks.size() < 2) {
+            return false;
+        }
+
+        List<Brick> sortedBricks = new ArrayList<>(overLappingBricks);
+        sortedBricks.sort(Comparator.comparingInt(Brick::getX));
+
+        int referenceY = sortedBricks.getFirst().getY();
+
+        for (Brick brick : sortedBricks) {
+            if (brick.getY() != referenceY) {
+                return false;
+            }
+        }
+
+        Brick current = sortedBricks.getFirst();
+
+        for (int i = 1; i < sortedBricks.size(); i++) {
+            Brick next = sortedBricks.get(i);
+
+            if (next.getX() != current.getX() + current.getWidth() + BRICK_GAP) {
+                return false;
+            }
+            current = next;
+        }
+        return true;
+    }
+
+    private boolean isVerticalGroup(List<Brick> overLappingBricks) {
+
+        if (overLappingBricks.size() < 2) {
+            return false;
+        }
+
+        List<Brick> sortedBricks = new ArrayList<>(overLappingBricks);
+        sortedBricks.sort(Comparator.comparingInt(Brick::getY));
+
+        int referenceX = sortedBricks.getFirst().getX();
+
+        for (Brick brick : sortedBricks) {
+            if (brick.getX() != referenceX) {
+                return false;
+            }
+        }
+
+        Brick current = sortedBricks.getFirst();
+
+        for (int i = 1; i < sortedBricks.size(); i++) {
+            Brick next = sortedBricks.get(i);
+
+            if (next.getY() != current.getY() + current.getHeight() + BRICK_GAP) {
+                return false;
+            }
+            current = next;
+        }
+        return true;
+    }
+
+    private void handleGroupedCollision(double combinedX, double combinedY, double combinedWidth, double combinedHeight, List<Brick> groupedBricks, List<BrickBoundsSnapshot> snapshotList) {
+
+        double ballBeforeX = ball.getX();
+        double ballBeforeY = ball.getY();
+        double ballBeforeVX = ball.getVelocityX();
+        double ballBeforeVY = ball.getVelocityY();
+
+        CollisionResolution collisionResolution = resolveBrickCollision(combinedX, combinedY, combinedWidth, combinedHeight);
+
+        if (collisionResolution == null) {
+            return;
+        }
+
+        double ballAfterX = ball.getX();
+        double ballAfterY = ball.getY();
+        double ballAfterVX = ball.getVelocityX();
+        double ballAfterVY = ball.getVelocityY();
+
+        List<BrickHitResult> hitResults = new ArrayList<>();
+
+        List<Brick> bricksToRemove = new ArrayList<>();
+
+        for (Brick brick : groupedBricks) {
+            boolean destroyed = brick.hit();
+            BrickBoundsSnapshot bounds = new BrickBoundsSnapshot(brick.getX(), brick.getY(), brick.getWidth(), brick.getHeight());
+            hitResults.add(new BrickHitResult(bounds, destroyed));
+
+            if (destroyed) {
+                score += brick.getPoints();
+                bricksToRemove.add(brick);
+            }
+        }
+
+        bricks.removeAll(bricksToRemove);
+
+        lastBrickCollision = new BrickCollisionSnapshot(combinedX, combinedY, combinedWidth, combinedHeight,
+                collisionResolution.collisionAxis(), collisionResolution.horizontalOverlap(),
+                collisionResolution.verticalOverlap(), hitResults);
+
+        BrickCollisionLogEntry entry = new BrickCollisionLogEntry(updateNumber, ballBeforeX, ballBeforeY, ballBeforeVX, ballBeforeVY,
+                snapshotList, combinedX, combinedY, combinedWidth, combinedHeight, collisionResolution.collisionAxis(),
+                collisionResolution.horizontalOverlap(), collisionResolution.verticalOverlap(),
+                hitResults, ballAfterX, ballAfterY, ballAfterVX, ballAfterVY);
+
+        debugLogger.logBrickCollision(entry);
     }
 
 

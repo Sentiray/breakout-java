@@ -144,14 +144,20 @@ public class GameRenderer {
         g.drawString("Last Paddle X: " + String.format("%.2f", lastResultVelocityX), LEFT_HUD_MARGIN, currentY);
 
         // render brick collision data
-        String axisMarker = "X";
-        g.setFont(new Font("Arial", Font.BOLD, 18));
-        FontMetrics fmBrickDebugData = g.getFontMetrics();
-
         BrickCollisionSnapshot snapshot = game.getLastBrickCollision();
         List<BrickBoundsSnapshot> boundsSnapshots = game.getLastOverlappingBricks();
 
+
         if (snapshot != null) {
+
+            String axisMarker = String.valueOf(snapshot.collisionAxis());
+            g.setFont(new Font("Arial", Font.BOLD, 18));
+            FontMetrics fmBrickDebugData = g.getFontMetrics();
+
+            int surfaceX = (int) Math.round(snapshot.x());
+            int surfaceY = (int) Math.round(snapshot.y());
+            int surfaceWidth = (int) Math.round(snapshot.width());
+            int surfaceHeight = (int) Math.round(snapshot.height());
 
             // draw yellow outline of all bricks that collide with ball
             g.setColor(Color.YELLOW);
@@ -159,24 +165,27 @@ public class GameRenderer {
                 g.drawRect(boundsSnapshot.x(), boundsSnapshot.y(), boundsSnapshot.width(), boundsSnapshot.height());
             }
 
-            // draw red outline around bricks that trigger a resolution
-            int destroyedBrickX = snapshot.x() + ((snapshot.width() - fmBrickDebugData.stringWidth(axisMarker)) / 2);
-            int destroyedBrickY = snapshot.y() + ((snapshot.height() - fmBrickDebugData.getHeight()) / 2) + fmBrickDebugData.getAscent();
+            // draw collision surface used for resolution
+            int axisMarkerX = surfaceX + ((surfaceWidth - fmBrickDebugData.stringWidth(axisMarker)) / 2);
+            int axisMarkerY = surfaceY + ((surfaceHeight - fmBrickDebugData.getHeight()) / 2) + fmBrickDebugData.getAscent();
 
             g.setColor(Color.RED);
-            if (snapshot.destroyed()) {
-                g.drawRect(snapshot.x(), snapshot.y(), snapshot.width(), snapshot.height());
-                g.drawLine(snapshot.x(), snapshot.y() + snapshot.height(), snapshot.x() + snapshot.width(), snapshot.y());
-            } else {
-                g.drawRect(snapshot.x(), snapshot.y(), snapshot.width(), snapshot.height());
+
+            g.drawRect(surfaceX, surfaceY, surfaceWidth, surfaceHeight);
+
+            for (BrickHitResult hitResult : snapshot.hitResults()) {
+                if (hitResult.destroyed()) {
+                    g.drawLine(hitResult.bounds().x(), hitResult.bounds().y() + hitResult.bounds().height(), hitResult.bounds().x() + hitResult.bounds().width(), hitResult.bounds().y());
+                }
             }
 
-            // red X and Y to display which axis resolver chose
+
+            // yellow X and Y to display which axis resolver chose
             g.setColor(Color.YELLOW);
             if (snapshot.collisionAxis() == CollisionAxis.X) {
-                g.drawString("X", destroyedBrickX, destroyedBrickY);
+                g.drawString(axisMarker, axisMarkerX, axisMarkerY);
             } else if (snapshot.collisionAxis() == CollisionAxis.Y) {
-                g.drawString("Y", destroyedBrickX, destroyedBrickY);
+                g.drawString(axisMarker, axisMarkerX, axisMarkerY);
             }
 
             g.setColor(Color.WHITE);
